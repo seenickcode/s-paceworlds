@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Lobby</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.4;
+    }
+
+    /* Login screen */
+    #login-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1em;
+    }
+    #login-card { max-width: 480px; width: 100%; }
+    #login-card h1 { margin-top: 0; }
+    #login { display: flex; gap: 0.5em; margin-top: 1em; }
+    #login input {
+      flex: 1; padding: 0.6em; font-size: 1.1em;
+      border: 1px solid #888; border-radius: 6px;
+    }
+    #login button {
+      padding: 0.6em 1.2em; font-size: 1.1em;
+      border: 0; background: #2c7be5; color: white;
+      border-radius: 6px; cursor: pointer;
+    }
+    #login button:hover { background: #1a5dbf; }
+
+    /* Lobby layout: header on top, main + sidebar below */
+    #lobby { display: none; flex: 1; flex-direction: column; min-height: 0; }
+    #lobby.active { display: flex; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7em 1.2em;
+      border-bottom: 1px solid #ccc;
+    }
+    header h1 { margin: 0; font-size: 1.15em; }
+    #controls { display: flex; gap: 0.5em; align-items: center; }
+    .btn {
+      padding: 0.5em 1em; font-size: 0.95em;
+      border: 1px solid #888; background: #fff;
+      border-radius: 6px; cursor: pointer;
+    }
+    .btn:hover { background: #f0f0f0; }
+    .btn.muted { background: #ffe1e1; border-color: #d33; color: #a00; }
+
+    main { flex: 1; display: flex; min-height: 0; }
+    #main-area {
+      flex: 1;
+      padding: 1.5em;
+      overflow: auto;
+      color: #888;
+    }
+    #sidebar {
+      width: 280px;
+      border-left: 1px solid #ccc;
+      padding: 1em;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #sidebar h2 {
+      margin: 0 0 0.5em;
+      font-size: 0.75em;
+      text-transform: uppercase;
+      color: #888;
+      letter-spacing: 0.08em;
+    }
+
+    /* User tile */
+    .user {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      gap: 0.7em;
+      align-items: center;
+      padding: 0.6em 0.8em;
+      margin: 0.3em 0;
+      background: #f3f3f3;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .user.speaking { border-color: #2ecc40; background: #e8fbe6; }
+    .user.muted .dot { background: #d33; }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #aaa;
+    }
+    .user.speaking .dot { background: #2ecc40; }
+    .user-info { display: flex; flex-direction: column; min-width: 0; }
+    .name {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .timer {
+      font-size: 0.8em;
+      color: #888;
+      font-variant-numeric: tabular-nums;
+    }
+    #status { color: #888; font-size: 0.8em; margin-top: 0.8em; }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; color: #e0e0e0; }
+      .user { background: #2a2a2a; }
+      .user.speaking { background: #1f3a1f; }
+      .btn { background: #2a2a2a; color: #e0e0e0; border-color: #555; }
+      .btn:hover { background: #333; }
+      .btn.muted { background: #3a1f1f; color: #ff9b9b; border-color: #a33; }
+      header, #sidebar { border-color: #333; }
+      #login input { background: #2a2a2a; color: #e0e0e0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="login-screen">
+    <div id="login-card">
+      <h1>Voice Lobby</h1>
+      <p>Enter your name and allow microphone access to talk to everyone else here.</p>
+      <div id="login">
+        <input id="name" placeholder="Your name" autocomplete="off" autofocus maxlength="40">
+        <button id="joinBtn">Join</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lobby">
+    <header>
+      <h1>Voice Lobby</h1>
+      <div id="controls">
+        <button id="muteBtn" class="btn">Mute</button>
+      </div>
+    </header>
+    <main>
+      <section id="main-area">
+        <p>Games will appear here.</p>
+      </section>
+      <aside id="sidebar">
+        <h2>People here</h2>
+        <div id="users"></div>
+        <div id="status"></div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const ICE_SERVERS = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ];
+
+    const peers = {};
+    let socket;
+    let localStream;
+    let muted = false;
+
+    const $name = document.getElementById('name');
+    const $joinBtn = document.getElementById('joinBtn');
+    const $muteBtn = document.getElementById('muteBtn');
+
+    $joinBtn.onclick = join;
+    $name.addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); });
+    $muteBtn.onclick = toggleMute;
+
+    async function join() {
+      const name = $name.value.trim();
+      if (!name) { $name.focus(); return; }
+      $joinBtn.disabled = true;
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: false,
+        });
+      } catch (err) {
+        alert('Microphone access is required to join.\n\n' + err.message);
+        $joinBtn.disabled = false;
+        return;
+      }
+
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('lobby').classList.add('active');
+
+      addUserTile('me', name, Date.now(), true);
+      setupSpeakingDetection('me', localStream);
+
+      socket = io();
+      socket.on('connect', () => {
+        socket.emit('join', name);
+        setStatus('Connected as ' + name);
+      });
+      socket.on('disconnect', () => setStatus('Disconnected. Refresh to rejoin.'));
+
+      socket.on('peers', async (existing) => {
+        for (const p of existing) {
+          const joinedAt = Date.now() - p.elapsedMs;
+          await createPeerConnection(p.id, p.name, joinedAt, true);
+        }
+      });
+
+      socket.on('user-joined', ({ id, name, elapsedMs }) => {
+        const joinedAt = Date.now() - (elapsedMs || 0);
+        createPeerConnection(id, name, joinedAt, false);
+      });
+
+      socket.on('signal', async ({ from, data }) => {
+        const peer = peers[from];
+        if (!peer) return;
+        try {
+          if (data.sdp) {
+            await peer.pc.setRemoteDescription(data.sdp);
+            if (data.sdp.type === 'offer') {
+              const answer = await peer.pc.createAnswer();
+              await peer.pc.setLocalDescription(answer);
+              socket.emit('signal', { to: from, data: { sdp: peer.pc.localDescription } });
+            }
+          } else if (data.candidate) {
+            await peer.pc.addIceCandidate(data.candidate);
+          }
+        } catch (err) {
+          console.warn('signal error', err);
+        }
+      });
+
+      socket.on('user-left', ({ id }) => {
+        if (peers[id]) {
+          peers[id].pc.close();
+          delete peers[id];
+        }
+        removeUserTile(id);
+      });
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      for (const track of localStream.getAudioTracks()) {
+        track.enabled = !muted;
+      }
+      $muteBtn.textContent = muted ? 'Unmute' : 'Mute';
+      $muteBtn.classList.toggle('muted', muted);
+      const meTile = document.getElementById('user-me');
+      if (meTile) meTile.classList.toggle('muted', muted);
+    }
+
+    async function createPeerConnection(id, name, joinedAt, isInitiator) {
+      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+      peers[id] = { pc, name };
+      addUserTile(id, name, joinedAt);
+
+      for (const track of localStream.getTracks()) {
+        pc.addTrack(track, localStream);
+      }
+
+      pc.onicecandidate = (e) => {
+        if (e.candidate) socket.emit('signal', { to: id, data: { candidate: e.candidate } });
+      };
+
+      pc.ontrack = (e) => {
+        let audio = document.getElementById('audio-' + id);
+        if (!audio) {
+          audio = document.createElement('audio');
+          audio.id = 'audio-' + id;
+          audio.autoplay = true;
+          audio.playsInline = true;
+          document.body.appendChild(audio);
+        }
+        audio.srcObject = e.streams[0];
+        setupSpeakingDetection(id, e.streams[0]);
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (['failed', 'closed'].includes(pc.connectionState)) {
+          console.warn('peer connection ' + pc.connectionState + ' for ' + name);
+        }
+      };
+
+      if (isInitiator) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit('signal', { to: id, data: { sdp: pc.localDescription } });
+      }
+    }
+
+    function addUserTile(id, name, joinedAt, isMe = false) {
+      if (document.getElementById('user-' + id)) return;
+      const div = document.createElement('div');
+      div.className = 'user';
+      div.id = 'user-' + id;
+      div.dataset.joinedAt = String(joinedAt);
+
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+
+      const info = document.createElement('div');
+      info.className = 'user-info';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'name';
+      nameEl.textContent = name + (isMe ? ' (you)' : '');
+      const timer = document.createElement('span');
+      timer.className = 'timer';
+      timer.textContent = formatElapsed(Date.now() - joinedAt);
+      info.appendChild(nameEl);
+      info.appendChild(timer);
+
+      div.appendChild(dot);
+      div.appendChild(info);
+      document.getElementById('users').appendChild(div);
+    }
+
+    function removeUserTile(id) {
+      const el = document.getElementById('user-' + id);
+      if (el) el.remove();
+      const audio = document.getElementById('audio-' + id);
+      if (audio) audio.remove();
+    }
+
+    function setupSpeakingDetection(id, stream) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.6;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tile = document.getElementById('user-' + id);
+      const THRESHOLD = 18;
+      function check() {
+        if (!document.getElementById('user-' + id)) return;
+        if (id === 'me' && muted) {
+          tile.classList.remove('speaking');
+          requestAnimationFrame(check);
+          return;
+        }
+        analyser.getByteFrequencyData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) sum += data[i];
+        const avg = sum / data.length;
+        tile.classList.toggle('speaking', avg > THRESHOLD);
+        requestAnimationFrame(check);
+      }
+      check();
+    }
+
+    function formatElapsed(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
+      return `${m}:${pad(s)}`;
+    }
+
+    setInterval(() => {
+      const now = Date.now();
+      for (const el of document.querySelectorAll('.user')) {
+        const ja = Number(el.dataset.joinedAt);
+        if (!ja) continue;
+        const t = el.querySelector('.timer');
+        if (t) t.textContent = formatElapsed(now - ja);
+      }
+    }, 1000);
+
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+  </script>
+</body>
+</html>
