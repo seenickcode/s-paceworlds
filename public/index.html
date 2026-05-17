@@ -15,7 +15,7 @@
       line-height: 1.4;
     }
 
-    /* Login screen */
+    /* Login / profile setup screen */
     #login-screen {
       flex: 1;
       display: flex;
@@ -23,19 +23,47 @@
       justify-content: center;
       padding: 1em;
     }
-    #login-card { max-width: 480px; width: 100%; }
+    #login-card { max-width: 520px; width: 100%; }
     #login-card h1 { margin-top: 0; }
-    #login { display: flex; gap: 0.5em; margin-top: 1em; }
-    #login input {
-      flex: 1; padding: 0.6em; font-size: 1.1em;
+    .field { margin: 1em 0; }
+    .field label {
+      display: block; font-size: 0.8em; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #888; margin-bottom: 0.4em;
+    }
+    .field input[type=text] {
+      width: 100%; padding: 0.6em; font-size: 1.1em;
       border: 1px solid #888; border-radius: 6px;
     }
-    #login button {
-      padding: 0.6em 1.2em; font-size: 1.1em;
+    .swatches { display: flex; flex-wrap: wrap; gap: 0.5em; }
+    .swatch {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid transparent; cursor: pointer;
+      position: relative;
+    }
+    .swatch.selected { border-color: #fff; box-shadow: 0 0 0 2px #2c7be5; }
+    .swatch.taken { opacity: 0.25; cursor: not-allowed; }
+    .swatch.taken::after {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(0,0,0,0.5) 4px 6px);
+      border-radius: 50%;
+    }
+    .avatar-row { display: flex; align-items: center; gap: 1em; }
+    .avatar-preview {
+      width: 96px; height: 96px;
+      border-radius: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: relative;
+    }
+    .avatar-preview svg { width: 100%; height: 100%; display: block; border-radius: 24px; }
+    .actions { display: flex; gap: 0.5em; margin-top: 1em; }
+    .primary {
+      padding: 0.6em 1.2em; font-size: 1.05em;
       border: 0; background: #2c7be5; color: white;
       border-radius: 6px; cursor: pointer;
     }
-    #login button:hover { background: #1a5dbf; }
+    .primary:hover { background: #1a5dbf; }
+    .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .err { color: #d33; font-size: 0.9em; min-height: 1.2em; margin-top: 0.4em; }
 
     /* Lobby layout: header on top, main + sidebar below */
     #lobby { display: none; flex: 1; flex-direction: column; min-height: 0; }
@@ -47,24 +75,141 @@
       justify-content: space-between;
       padding: 0.7em 1.2em;
       border-bottom: 1px solid #ccc;
+      gap: 1em;
     }
     header h1 { margin: 0; font-size: 1.15em; }
+    #me-strip {
+      display: flex; align-items: center; gap: 0.6em;
+      padding: 0.3em 0.7em 0.3em 0.3em;
+      border-radius: 999px;
+      background: #f3f3f3;
+    }
+    #me-avatar { width: 32px; height: 32px; border-radius: 50%; position: relative; display: inline-block; }
+    #me-avatar svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
+    #me-name { font-weight: 500; }
+    #me-color {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #fff; box-shadow: 0 0 0 1px #888;
+    }
     #controls { display: flex; gap: 0.5em; align-items: center; }
     .btn {
-      padding: 0.5em 1em; font-size: 0.95em;
+      padding: 0.45em 0.9em; font-size: 0.95em;
       border: 1px solid #888; background: #fff;
       border-radius: 6px; cursor: pointer;
     }
     .btn:hover { background: #f0f0f0; }
     .btn.muted { background: #ffe1e1; border-color: #d33; color: #a00; }
+    .btn.small { padding: 0.25em 0.6em; font-size: 0.85em; }
 
     main { flex: 1; display: flex; min-height: 0; }
     #main-area {
       flex: 1;
       padding: 1.5em;
       overflow: auto;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* App store */
+    #app-store h2 {
+      margin: 0 0 1em;
+      font-size: 1em;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: #888;
     }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1.2em;
+    }
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.8em;
+      background: transparent;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+      transition: transform 0.1s, background 0.1s;
+    }
+    .app-card:hover { background: #f3f3f3; transform: translateY(-2px); }
+    .app-icon {
+      width: 84px; height: 84px;
+      border-radius: 22px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: block;
+      overflow: hidden;
+    }
+    .app-name { font-size: 0.9em; font-weight: 500; text-align: center; }
+
+    /* Game view */
+    #game-view { flex: 1; display: none; flex-direction: column; min-height: 0; }
+    #game-view.active { display: flex; }
+    #game-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8em;
+      margin-bottom: 0.8em;
+    }
+    #game-header h2 { margin: 0; font-size: 1.1em; flex: 1; }
+    #game-canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    #game-canvas { display: block; max-width: 100%; max-height: 100%; }
+    #game-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      background: rgba(0,0,0,0.6);
+      gap: 1em;
+    }
+    #game-overlay.hidden { display: none; }
+    #game-overlay h3 { margin: 0; font-size: 1.6em; }
+    #game-overlay p { margin: 0; max-width: 32em; padding: 0 1em; }
+    #game-overlay button {
+      padding: 0.6em 1.5em; font-size: 1em;
+      border: 0; background: #2c7be5; color: white;
+      border-radius: 6px; cursor: pointer;
+    }
+    #game-overlay button:hover { background: #1a5dbf; }
+    #game-hud {
+      position: absolute;
+      top: 0.8em;
+      left: 0.8em;
+      right: 0.8em;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1em;
+      color: white;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+      text-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
+    #hud-scores { display: flex; flex-direction: column; gap: 0.2em; font-size: 0.9em; }
+    .hud-row { display: flex; align-items: center; gap: 0.4em; }
+    .hud-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* Sidebar */
     #sidebar {
       width: 280px;
       border-left: 1px solid #ccc;
@@ -84,10 +229,10 @@
     /* User tile */
     .user {
       display: grid;
-      grid-template-columns: 12px 1fr;
+      grid-template-columns: 40px 1fr;
       gap: 0.7em;
       align-items: center;
-      padding: 0.6em 0.8em;
+      padding: 0.5em 0.7em;
       margin: 0.3em 0;
       background: #f3f3f3;
       border-radius: 10px;
@@ -95,12 +240,40 @@
       transition: border-color 0.1s, background 0.1s;
     }
     .user.speaking { border-color: #2ecc40; background: #e8fbe6; }
-    .user.muted .dot { background: #d33; }
-    .dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: #aaa;
+    .user-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      position: relative;
+      border: 3px solid #888;
     }
-    .user.speaking .dot { background: #2ecc40; }
+    .user-avatar svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
+    .rank-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      min-width: 16px; height: 16px;
+      padding: 0 4px;
+      background: linear-gradient(180deg, #ffd351, #f1c40f);
+      color: #5a3700;
+      font-size: 10px; font-weight: 700; line-height: 1;
+      border-radius: 999px;
+      border: 1.5px solid #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      box-sizing: content-box;
+    }
+    .avatar-preview .rank-badge {
+      top: 4px; right: 4px;
+      min-width: 24px; height: 24px;
+      font-size: 13px;
+      padding: 0 6px;
+    }
+    .user.muted .user-avatar::after {
+      content: '🔇';
+      position: absolute; right: -4px; bottom: -4px;
+      font-size: 12px;
+      background: #d33; color: #fff;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
     .user-info { display: flex; flex-direction: column; min-width: 0; }
     .name {
       font-weight: 500;
@@ -113,7 +286,39 @@
       color: #888;
       font-variant-numeric: tabular-nums;
     }
+    .user-meta {
+      display: flex;
+      gap: 0.4em;
+      align-items: center;
+      font-size: 0.8em;
+      flex-wrap: wrap;
+    }
+    .user-meta .sep { color: #aaa; }
+    .game-tag { color: #888; }
+    a.game-link {
+      color: #2c7be5;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    a.game-link:hover { color: #1a5dbf; }
     #status { color: #888; font-size: 0.8em; margin-top: 0.8em; }
+
+    /* Edit profile modal */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 1em; z-index: 10;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal {
+      background: #fff; color: #222;
+      max-width: 520px; width: 100%;
+      padding: 1.5em; border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .modal h2 { margin-top: 0; }
 
     @media (prefers-color-scheme: dark) {
       body { background: #1a1a1a; color: #e0e0e0; }
@@ -123,7 +328,10 @@
       .btn:hover { background: #333; }
       .btn.muted { background: #3a1f1f; color: #ff9b9b; border-color: #a33; }
       header, #sidebar { border-color: #333; }
-      #login input { background: #2a2a2a; color: #e0e0e0; }
+      .field input[type=text] { background: #2a2a2a; color: #e0e0e0; }
+      .app-card:hover { background: #2a2a2a; }
+      #me-strip { background: #2a2a2a; }
+      .modal { background: #222; color: #e0e0e0; }
     }
   </style>
 </head>
@@ -131,10 +339,29 @@
   <div id="login-screen">
     <div id="login-card">
       <h1>Voice Lobby</h1>
-      <p>Enter your name and allow microphone access to talk to everyone else here.</p>
-      <div id="login">
-        <input id="name" placeholder="Your name" autocomplete="off" autofocus maxlength="40">
-        <button id="joinBtn">Join</button>
+      <p>Set up your profile, then join.</p>
+
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" type="text" placeholder="Your name" autocomplete="off" autofocus maxlength="40">
+      </div>
+
+      <div class="field">
+        <label>Your color</label>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div class="field">
+        <label>Your avatar</label>
+        <div class="avatar-row">
+          <div class="avatar-preview" id="avatar-preview"></div>
+          <button class="btn" id="rerollBtn" type="button">Reroll</button>
+        </div>
+      </div>
+
+      <div class="err" id="login-err"></div>
+      <div class="actions">
+        <button class="primary" id="joinBtn">Join</button>
       </div>
     </div>
   </div>
@@ -143,12 +370,41 @@
     <header>
       <h1>Voice Lobby</h1>
       <div id="controls">
+        <div id="me-strip">
+          <span id="me-avatar"></span>
+          <span id="me-color"></span>
+          <span id="me-name"></span>
+          <button class="btn small" id="editProfileBtn" type="button">Edit</button>
+        </div>
         <button id="muteBtn" class="btn">Mute</button>
       </div>
     </header>
     <main>
       <section id="main-area">
-        <p>Games will appear here.</p>
+        <div id="app-store">
+          <h2>App Store</h2>
+          <div class="app-grid" id="app-grid"></div>
+        </div>
+        <div id="game-view">
+          <div id="game-header">
+            <button class="btn" id="backBtn">← Back</button>
+            <h2 id="game-title"></h2>
+            <button class="btn" id="pauseBtn">Pause</button>
+            <button class="btn" id="restartBtn">Restart</button>
+          </div>
+          <div id="game-canvas-wrap">
+            <canvas id="game-canvas" width="800" height="600"></canvas>
+            <div id="game-hud">
+              <div id="hud-scores"></div>
+              <span id="hud-shield">Shield: 100%</span>
+            </div>
+            <div id="game-overlay">
+              <h3 id="overlay-title"></h3>
+              <p id="overlay-text"></p>
+              <button id="overlay-btn"></button>
+            </div>
+          </div>
+        </div>
       </section>
       <aside id="sidebar">
         <h2>People here</h2>
@@ -158,65 +414,395 @@
     </main>
   </div>
 
+  <!-- Confirmation modal -->
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal">
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-text"></p>
+      <div class="actions">
+        <button class="btn" id="confirm-noBtn" type="button">Cancel</button>
+        <button class="primary" id="confirm-yesBtn" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit profile modal -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal">
+      <h2>Edit profile</h2>
+      <div class="field">
+        <label for="edit-name">Your name</label>
+        <input id="edit-name" type="text" maxlength="40">
+      </div>
+      <div class="field">
+        <label>Your color</label>
+        <div class="swatches" id="edit-swatches"></div>
+      </div>
+      <div class="field">
+        <label>Your avatar</label>
+        <div class="avatar-row">
+          <div class="avatar-preview" id="edit-avatar"></div>
+          <button class="btn" id="edit-rerollBtn" type="button">Reroll</button>
+        </div>
+      </div>
+      <div class="err" id="edit-err"></div>
+      <div class="actions">
+        <button class="btn" id="edit-cancelBtn" type="button">Cancel</button>
+        <button class="primary" id="edit-saveBtn" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    /* ========== Profile (localStorage) ========== */
+    const PROFILE_KEY = 'voiceLobbyProfile';
+    const COLORS = [
+      '#e74c3c', '#e67e22', '#f1c40f', '#2ecc40',
+      '#1abc9c', '#3498db', '#9b59b6', '#e91e63',
+      '#795548', '#607d8b', '#00bcd4', '#ff5722',
+    ];
+
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_KEY);
+        if (!raw) return null;
+        const p = JSON.parse(raw);
+        if (!p || !p.name || !p.color || p.avatarSeed === undefined) return null;
+        if (typeof p.score !== 'number') p.score = 0;
+        return p;
+      } catch { return null; }
+    }
+    function saveProfile(p) {
+      const out = {
+        name: p.name, color: p.color, avatarSeed: p.avatarSeed,
+        score: Math.max(0, Math.floor(p.score || 0)),
+      };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(out));
+    }
+    function computeLevel(score) {
+      return Math.floor((Math.max(0, score || 0)) / 10);
+    }
+    function rankBadgeHtml(score) {
+      const lvl = computeLevel(score);
+      return `<span class="rank-badge" title="Rank ${lvl} · ${score || 0} pts">${lvl}</span>`;
+    }
+
+    /* ========== Avatar generator ========== */
+    function mulberry32(a) {
+      return function() {
+        let t = a += 0x6d2b79f5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    const SKIN_COLORS = ['#f7d6b3', '#f0c294', '#d8a878', '#a86f4b', '#7c4f33', '#caa472', '#b07e58'];
+    const HAIR_COLORS = ['#222', '#5b3a1a', '#a06a2c', '#d8a13d', '#c84e2a', '#e0e0e0', '#6f4ea0', '#2ecc40'];
+
+    function generateAvatarSvg(seed) {
+      const r = mulberry32(seed >>> 0);
+      const skin = SKIN_COLORS[Math.floor(r() * SKIN_COLORS.length)];
+      const hairColor = HAIR_COLORS[Math.floor(r() * HAIR_COLORS.length)];
+      const headShape = Math.floor(r() * 3); // 0 round, 1 oval-tall, 2 oval-wide
+      const eyes = Math.floor(r() * 6);
+      const mouth = Math.floor(r() * 6);
+      const hair = Math.floor(r() * 7);
+      const blush = r() < 0.5;
+      const bg = `hsl(${Math.floor(r() * 360)} 60% 80%)`;
+
+      let head;
+      if (headShape === 0) head = `<circle cx="50" cy="52" r="32" fill="${skin}"/>`;
+      else if (headShape === 1) head = `<ellipse cx="50" cy="52" rx="28" ry="34" fill="${skin}"/>`;
+      else head = `<ellipse cx="50" cy="54" rx="34" ry="28" fill="${skin}"/>`;
+
+      const eyeY = 48;
+      let eyeSvg = '';
+      switch (eyes) {
+        case 0: // dots
+          eyeSvg = `<circle cx="40" cy="${eyeY}" r="3" fill="#222"/><circle cx="60" cy="${eyeY}" r="3" fill="#222"/>`;
+          break;
+        case 1: // wide ovals
+          eyeSvg = `<ellipse cx="40" cy="${eyeY}" rx="5" ry="6" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                    <ellipse cx="60" cy="${eyeY}" rx="5" ry="6" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                    <circle cx="40" cy="${eyeY + 1}" r="2" fill="#222"/>
+                    <circle cx="60" cy="${eyeY + 1}" r="2" fill="#222"/>`;
+          break;
+        case 2: // x eyes
+          eyeSvg = `<g stroke="#222" stroke-width="2" stroke-linecap="round">
+                      <line x1="36" y1="44" x2="44" y2="52"/><line x1="44" y1="44" x2="36" y2="52"/>
+                      <line x1="56" y1="44" x2="64" y2="52"/><line x1="64" y1="44" x2="56" y2="52"/>
+                    </g>`;
+          break;
+        case 3: // glasses
+          eyeSvg = `<g fill="none" stroke="#222" stroke-width="2">
+                      <circle cx="40" cy="${eyeY}" r="6"/><circle cx="60" cy="${eyeY}" r="6"/>
+                      <line x1="46" y1="${eyeY}" x2="54" y2="${eyeY}"/>
+                    </g>
+                    <circle cx="40" cy="${eyeY}" r="2" fill="#222"/>
+                    <circle cx="60" cy="${eyeY}" r="2" fill="#222"/>`;
+          break;
+        case 4: // happy lines
+          eyeSvg = `<g fill="none" stroke="#222" stroke-width="2" stroke-linecap="round">
+                      <path d="M35 ${eyeY + 1} q5 -6 10 0"/>
+                      <path d="M55 ${eyeY + 1} q5 -6 10 0"/>
+                    </g>`;
+          break;
+        case 5: // stars
+          eyeSvg = `<g fill="#f1c40f" stroke="#222" stroke-width="0.6">
+                      <polygon points="40,42 41.5,46.5 46,46.5 42.5,49 44,53 40,50.5 36,53 37.5,49 34,46.5 38.5,46.5"/>
+                      <polygon points="60,42 61.5,46.5 66,46.5 62.5,49 64,53 60,50.5 56,53 57.5,49 54,46.5 58.5,46.5"/>
+                    </g>`;
+          break;
+      }
+
+      const mouthY = 68;
+      let mouthSvg = '';
+      switch (mouth) {
+        case 0: // smile
+          mouthSvg = `<path d="M38 ${mouthY} q12 12 24 0" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>`;
+          break;
+        case 1: // big grin with teeth
+          mouthSvg = `<path d="M36 ${mouthY - 2} q14 14 28 0 z" fill="#a00" stroke="#222" stroke-width="2"/>
+                      <rect x="40" y="${mouthY - 1}" width="20" height="4" fill="#fff"/>`;
+          break;
+        case 2: // o-mouth
+          mouthSvg = `<ellipse cx="50" cy="${mouthY + 2}" rx="5" ry="6" fill="#a00" stroke="#222" stroke-width="2"/>`;
+          break;
+        case 3: // line
+          mouthSvg = `<line x1="40" y1="${mouthY + 2}" x2="60" y2="${mouthY + 2}" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>`;
+          break;
+        case 4: // tongue out
+          mouthSvg = `<path d="M38 ${mouthY} q12 10 24 0" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>
+                      <ellipse cx="50" cy="${mouthY + 6}" rx="4" ry="5" fill="#e75480" stroke="#222" stroke-width="1.5"/>`;
+          break;
+        case 5: // frown
+          mouthSvg = `<path d="M38 ${mouthY + 4} q12 -10 24 0" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>`;
+          break;
+      }
+
+      let hairSvg = '';
+      switch (hair) {
+        case 0: break; // bald
+        case 1: // top tuft
+          hairSvg = `<path d="M44 22 q6 -10 12 0 t -12 0" fill="${hairColor}"/>`;
+          break;
+        case 2: // spiky
+          hairSvg = `<path d="M22 32 l8 -16 6 14 6 -18 6 18 6 -14 8 16 z" fill="${hairColor}"/>`;
+          break;
+        case 3: // top hat
+          hairSvg = `<rect x="34" y="8" width="32" height="14" fill="#222"/>
+                     <rect x="26" y="22" width="48" height="3" fill="#222"/>`;
+          break;
+        case 4: // antenna
+          hairSvg = `<line x1="50" y1="22" x2="50" y2="6" stroke="#222" stroke-width="2"/>
+                     <circle cx="50" cy="4" r="4" fill="${hairColor}"/>`;
+          break;
+        case 5: // side curl
+          hairSvg = `<path d="M22 40 q-6 -22 28 -28 q34 6 28 28" fill="${hairColor}"/>`;
+          break;
+        case 6: // beanie
+          hairSvg = `<path d="M22 36 q0 -28 28 -28 q28 0 28 28 z" fill="${hairColor}"/>
+                     <circle cx="50" cy="6" r="4" fill="${hairColor}"/>`;
+          break;
+      }
+
+      const blushSvg = blush
+        ? `<circle cx="32" cy="60" r="4" fill="#e75480" opacity="0.5"/>
+           <circle cx="68" cy="60" r="4" fill="#e75480" opacity="0.5"/>`
+        : '';
+
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        ${head}
+        ${blushSvg}
+        ${eyeSvg}
+        ${mouthSvg}
+        ${hairSvg}
+      </svg>`;
+    }
+
+    function randomSeed() { return Math.floor(Math.random() * 0xffffffff); }
+
+    /* ========== Login screen ========== */
+    let pendingProfile = { name: '', color: COLORS[0], avatarSeed: randomSeed() };
+    let takenColors = new Set();
+
+    const $name = document.getElementById('name');
+    const $swatches = document.getElementById('swatches');
+    const $avatarPreview = document.getElementById('avatar-preview');
+    const $rerollBtn = document.getElementById('rerollBtn');
+    const $joinBtn = document.getElementById('joinBtn');
+    const $loginErr = document.getElementById('login-err');
+
+    function renderSwatches(container, selectedColor, taken, onPick) {
+      container.innerHTML = '';
+      for (const c of COLORS) {
+        const sw = document.createElement('button');
+        sw.type = 'button';
+        sw.className = 'swatch';
+        sw.style.background = c;
+        sw.title = c;
+        if (c === selectedColor) sw.classList.add('selected');
+        if (taken.has(c) && c !== selectedColor) {
+          sw.classList.add('taken');
+          sw.disabled = true;
+        }
+        sw.onclick = () => onPick(c);
+        container.appendChild(sw);
+      }
+    }
+
+    function renderLoginUi() {
+      renderSwatches($swatches, pendingProfile.color, takenColors, (c) => {
+        pendingProfile.color = c;
+        renderLoginUi();
+      });
+      $avatarPreview.innerHTML = generateAvatarSvg(pendingProfile.avatarSeed) + rankBadgeHtml(pendingProfile.score);
+    }
+
+    $rerollBtn.onclick = () => {
+      pendingProfile.avatarSeed = randomSeed();
+      renderLoginUi();
+    };
+    $joinBtn.onclick = () => join(pendingProfile);
+    $name.addEventListener('input', () => { pendingProfile.name = $name.value; });
+    $name.addEventListener('keydown', (e) => { if (e.key === 'Enter') join(pendingProfile); });
+
+    /* ========== Lobby join + voice ========== */
     const ICE_SERVERS = [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
     ];
-
     const peers = {};
+    const peerProfiles = {}; // id -> {name, color, avatarSeed}
     let socket;
     let localStream;
     let muted = false;
+    let myId = null;
+    let myProfile = null;
 
-    const $name = document.getElementById('name');
-    const $joinBtn = document.getElementById('joinBtn');
-    const $muteBtn = document.getElementById('muteBtn');
-
-    $joinBtn.onclick = join;
-    $name.addEventListener('keydown', (e) => { if (e.key === 'Enter') join(); });
-    $muteBtn.onclick = toggleMute;
-
-    async function join() {
-      const name = $name.value.trim();
-      if (!name) { $name.focus(); return; }
-      $joinBtn.disabled = true;
-
+    async function ensureMic() {
+      if (localStream) return true;
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
           video: false,
         });
+        return true;
       } catch (err) {
         alert('Microphone access is required to join.\n\n' + err.message);
+        return false;
+      }
+    }
+
+    async function join(profile) {
+      const name = (profile.name || '').trim();
+      if (!name) { $loginErr.textContent = 'Please enter a name.'; $name.focus(); return; }
+      $joinBtn.disabled = true;
+      $loginErr.textContent = '';
+
+      if (!socket) connectSocket();
+      // Wait until we have taken-colors info; this also tells us the socket is connected.
+      await waitForTakenColors();
+      if (takenColors.has(profile.color)) {
+        $loginErr.textContent = 'That color is taken — pick another.';
+        renderLoginUi();
         $joinBtn.disabled = false;
         return;
       }
 
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('lobby').classList.add('active');
+      const ok = await ensureMic();
+      if (!ok) { $joinBtn.disabled = false; return; }
 
-      addUserTile('me', name, Date.now(), true);
-      setupSpeakingDetection('me', localStream);
+      myProfile = {
+        name, color: profile.color, avatarSeed: profile.avatarSeed,
+        score: profile.score || 0,
+      };
+      saveProfile(myProfile);
 
-      socket = io();
-      socket.on('connect', () => {
-        socket.emit('join', name);
-        setStatus('Connected as ' + name);
+      socket.emit('join', myProfile);
+    }
+
+    let takenColorsResolver = null;
+    function waitForTakenColors() {
+      return new Promise((res) => {
+        socket.emit('get-taken-colors');
+        takenColorsResolver = res;
       });
+    }
+
+    function connectSocket() {
+      socket = io();
+      socket.on('connect', () => setStatus('Connected'));
       socket.on('disconnect', () => setStatus('Disconnected. Refresh to rejoin.'));
 
-      socket.on('peers', async (existing) => {
+      socket.on('taken-colors', (list) => {
+        takenColors = new Set(list);
+        renderLoginUi();
+        if (takenColorsResolver) { takenColorsResolver(); takenColorsResolver = null; }
+      });
+
+      socket.on('join-rejected', ({ reason, takenColors: list }) => {
+        takenColors = new Set(list);
+        renderLoginUi();
+        $loginErr.textContent = reason === 'color-taken' ? 'That color was just taken — pick another.' : 'Could not join.';
+        $joinBtn.disabled = false;
+      });
+
+      socket.on('joined', ({ id, peers: existing }) => {
+        myId = id;
+        showLobby();
+        addUserTile('me', myProfile, Date.now(), true);
+        setupSpeakingDetection('me', localStream);
         for (const p of existing) {
+          peerProfiles[p.id] = {
+            name: p.name, color: p.color, avatarSeed: p.avatarSeed,
+            currentGame: p.currentGame || null, score: p.score || 0,
+          };
           const joinedAt = Date.now() - p.elapsedMs;
-          await createPeerConnection(p.id, p.name, joinedAt, true);
+          createPeerConnection(p.id, peerProfiles[p.id], joinedAt, true);
         }
       });
 
-      socket.on('user-joined', ({ id, name, elapsedMs }) => {
+      socket.on('user-joined', ({ id, name, color, avatarSeed, currentGame, score, elapsedMs }) => {
+        peerProfiles[id] = { name, color, avatarSeed, currentGame: currentGame || null, score: score || 0 };
         const joinedAt = Date.now() - (elapsedMs || 0);
-        createPeerConnection(id, name, joinedAt, false);
+        createPeerConnection(id, peerProfiles[id], joinedAt, false);
+      });
+
+      socket.on('user-game-changed', ({ id, currentGame }) => {
+        if (id === myId) {
+          myProfile.currentGame = currentGame;
+          refreshUserMeta('me');
+        } else {
+          if (!peerProfiles[id]) peerProfiles[id] = {};
+          peerProfiles[id].currentGame = currentGame;
+          refreshUserMeta(id);
+        }
+      });
+
+      socket.on('profile-updated', ({ id, name, color, avatarSeed, currentGame, score }) => {
+        if (id === myId) {
+          myProfile = { ...myProfile, name, color, avatarSeed };
+          if (currentGame !== undefined) myProfile.currentGame = currentGame;
+          if (score !== undefined) myProfile.score = score;
+          saveProfile(myProfile);
+          renderMeStrip();
+          updateUserTile('me', myProfile);
+        } else {
+          peerProfiles[id] = { ...(peerProfiles[id] || {}), name, color, avatarSeed };
+          if (currentGame !== undefined) peerProfiles[id].currentGame = currentGame;
+          if (score !== undefined) peerProfiles[id].score = score;
+          updateUserTile(id, peerProfiles[id]);
+        }
+      });
+
+      socket.on('profile-rejected', ({ reason, takenColors: list }) => {
+        takenColors = new Set(list);
+        renderEditUi();
+        document.getElementById('edit-err').textContent =
+          reason === 'color-taken' ? 'That color is taken — pick another.' : 'Could not save profile.';
       });
 
       socket.on('signal', async ({ from, data }) => {
@@ -233,39 +819,82 @@
           } else if (data.candidate) {
             await peer.pc.addIceCandidate(data.candidate);
           }
-        } catch (err) {
-          console.warn('signal error', err);
-        }
+        } catch (err) { console.warn('signal error', err); }
       });
 
       socket.on('user-left', ({ id }) => {
-        if (peers[id]) {
-          peers[id].pc.close();
-          delete peers[id];
-        }
+        if (peers[id]) { peers[id].pc.close(); delete peers[id]; }
+        delete peerProfiles[id];
         removeUserTile(id);
+      });
+
+      /* Game events */
+      socket.on('game-state', (payload) => {
+        if (currentGame && currentGame.onState) currentGame.onState(payload);
+      });
+      socket.on('game-player-joined', (p) => {
+        peerProfiles[p.id] = { name: p.name, color: p.color, avatarSeed: p.avatarSeed };
+        if (currentGame && currentGame.onPlayerJoined) currentGame.onPlayerJoined(p);
+      });
+      socket.on('game-player-left', ({ id }) => {
+        if (currentGame && currentGame.onPlayerLeft) currentGame.onPlayerLeft(id);
+      });
+      socket.on('game-move', (m) => {
+        if (currentGame && currentGame.onMove) currentGame.onMove(m);
+      });
+      socket.on('game-fire', (b) => {
+        if (currentGame && currentGame.onFire) currentGame.onFire(b);
+      });
+      socket.on('game-asteroid', (a) => {
+        if (currentGame && currentGame.onAsteroid) currentGame.onAsteroid(a);
+      });
+      socket.on('game-kill', (k) => {
+        if (currentGame && currentGame.onKill) currentGame.onKill(k);
+      });
+      socket.on('game-hit', (h) => {
+        if (currentGame && currentGame.onShieldHit) currentGame.onShieldHit(h);
+      });
+      socket.on('game-restart', (info) => {
+        if (currentGame && currentGame.onRestart) currentGame.onRestart(info);
+      });
+      socket.on('game-paused', (info) => {
+        if (currentGame && currentGame.onPaused) currentGame.onPaused(info);
+      });
+      socket.on('game-resumed', (info) => {
+        if (currentGame && currentGame.onResumed) currentGame.onResumed(info);
       });
     }
 
+    function showLobby() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('lobby').classList.add('active');
+      renderMeStrip();
+    }
+
+    function renderMeStrip() {
+      document.getElementById('me-avatar').innerHTML =
+        generateAvatarSvg(myProfile.avatarSeed) + rankBadgeHtml(myProfile.score);
+      document.getElementById('me-color').style.background = myProfile.color;
+      document.getElementById('me-name').textContent = myProfile.name;
+    }
+
+    document.getElementById('muteBtn').onclick = toggleMute;
     function toggleMute() {
       muted = !muted;
-      for (const track of localStream.getAudioTracks()) {
-        track.enabled = !muted;
-      }
-      $muteBtn.textContent = muted ? 'Unmute' : 'Mute';
-      $muteBtn.classList.toggle('muted', muted);
+      for (const track of localStream.getAudioTracks()) track.enabled = !muted;
+      const btn = document.getElementById('muteBtn');
+      btn.textContent = muted ? 'Unmute' : 'Mute';
+      btn.classList.toggle('muted', muted);
       const meTile = document.getElementById('user-me');
       if (meTile) meTile.classList.toggle('muted', muted);
     }
 
-    async function createPeerConnection(id, name, joinedAt, isInitiator) {
+    async function createPeerConnection(id, profile, joinedAt, isInitiator) {
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      peers[id] = { pc, name };
-      addUserTile(id, name, joinedAt);
+      peers[id] = { pc, profile };
+      addUserTile(id, profile, joinedAt);
 
-      for (const track of localStream.getTracks()) {
-        pc.addTrack(track, localStream);
-      }
+      for (const track of localStream.getTracks()) pc.addTrack(track, localStream);
 
       pc.onicecandidate = (e) => {
         if (e.candidate) socket.emit('signal', { to: id, data: { candidate: e.candidate } });
@@ -286,7 +915,7 @@
 
       pc.onconnectionstatechange = () => {
         if (['failed', 'closed'].includes(pc.connectionState)) {
-          console.warn('peer connection ' + pc.connectionState + ' for ' + name);
+          console.warn('peer connection ' + pc.connectionState + ' for ' + profile.name);
         }
       };
 
@@ -297,30 +926,96 @@
       }
     }
 
-    function addUserTile(id, name, joinedAt, isMe = false) {
+    function addUserTile(id, profile, joinedAt, isMe = false) {
       if (document.getElementById('user-' + id)) return;
       const div = document.createElement('div');
       div.className = 'user';
       div.id = 'user-' + id;
       div.dataset.joinedAt = String(joinedAt);
 
-      const dot = document.createElement('span');
-      dot.className = 'dot';
+      const av = document.createElement('div');
+      av.className = 'user-avatar';
+      av.style.borderColor = profile.color;
+      av.innerHTML = generateAvatarSvg(profile.avatarSeed) + rankBadgeHtml(profile.score);
 
       const info = document.createElement('div');
       info.className = 'user-info';
       const nameEl = document.createElement('span');
       nameEl.className = 'name';
-      nameEl.textContent = name + (isMe ? ' (you)' : '');
+      nameEl.textContent = profile.name + (isMe ? ' (you)' : '');
+      info.appendChild(nameEl);
+      info.appendChild(buildUserMeta(id, profile, isMe, joinedAt));
+
+      div.appendChild(av);
+      div.appendChild(info);
+      document.getElementById('users').appendChild(div);
+    }
+
+    function updateUserTile(id, profile) {
+      const el = document.getElementById('user-' + id);
+      if (!el) return;
+      const av = el.querySelector('.user-avatar');
+      av.style.borderColor = profile.color;
+      av.innerHTML = generateAvatarSvg(profile.avatarSeed) + rankBadgeHtml(profile.score);
+      const nameEl = el.querySelector('.name');
+      nameEl.textContent = profile.name + (id === 'me' ? ' (you)' : '');
+      refreshUserMeta(id);
+    }
+
+    function buildUserMeta(id, profile, isMe, joinedAt) {
+      const meta = document.createElement('div');
+      meta.className = 'user-meta';
       const timer = document.createElement('span');
       timer.className = 'timer';
       timer.textContent = formatElapsed(Date.now() - joinedAt);
-      info.appendChild(nameEl);
-      info.appendChild(timer);
+      meta.appendChild(timer);
 
-      div.appendChild(dot);
-      div.appendChild(info);
-      document.getElementById('users').appendChild(div);
+      if (profile.currentGame) {
+        const game = GAMES.find(g => g.id === profile.currentGame);
+        if (game) {
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '·';
+          meta.appendChild(sep);
+          if (isMe) {
+            const tag = document.createElement('span');
+            tag.className = 'game-tag';
+            tag.textContent = 'in ' + game.name;
+            meta.appendChild(tag);
+          } else {
+            const link = document.createElement('a');
+            link.className = 'game-link';
+            link.href = '#' + game.id;
+            link.textContent = '→ ' + game.name;
+            link.onclick = (e) => { e.preventDefault(); joinGameByLink(game); };
+            meta.appendChild(link);
+          }
+        }
+      }
+      return meta;
+    }
+
+    function refreshUserMeta(id) {
+      const el = document.getElementById('user-' + id);
+      if (!el) return;
+      const isMe = id === 'me';
+      const profile = isMe ? myProfile : peerProfiles[id];
+      if (!profile) return;
+      const joinedAt = Number(el.dataset.joinedAt) || Date.now();
+      const oldMeta = el.querySelector('.user-meta');
+      const newMeta = buildUserMeta(id, profile, isMe, joinedAt);
+      if (oldMeta) oldMeta.replaceWith(newMeta);
+      else el.querySelector('.user-info').appendChild(newMeta);
+    }
+
+    async function joinGameByLink(game) {
+      if (currentGameId === game.id) return;
+      if (currentGameId) {
+        const ok = await tryLeaveGame();
+        if (!ok) return;
+        closeGameImmediate();
+      }
+      openGame(game);
     }
 
     function removeUserTile(id) {
@@ -377,8 +1072,1008 @@
       }
     }, 1000);
 
-    function setStatus(msg) {
-      document.getElementById('status').textContent = msg;
+    function setStatus(msg) { document.getElementById('status').textContent = msg; }
+
+    /* ========== Edit profile modal ========== */
+    const $editModal = document.getElementById('editModal');
+    const $editName = document.getElementById('edit-name');
+    const $editSwatches = document.getElementById('edit-swatches');
+    const $editAvatar = document.getElementById('edit-avatar');
+    const $editErr = document.getElementById('edit-err');
+    let editDraft = null;
+
+    function renderEditUi() {
+      renderSwatches($editSwatches, editDraft.color, takenColors, (c) => {
+        editDraft.color = c;
+        renderEditUi();
+      });
+      $editAvatar.innerHTML = generateAvatarSvg(editDraft.avatarSeed) + rankBadgeHtml(editDraft.score);
+    }
+
+    document.getElementById('editProfileBtn').onclick = () => {
+      editDraft = { ...myProfile };
+      $editName.value = editDraft.name;
+      $editErr.textContent = '';
+      socket.emit('get-taken-colors');
+      renderEditUi();
+      $editModal.classList.add('active');
+    };
+    $editName.addEventListener('input', () => { editDraft.name = $editName.value; });
+    document.getElementById('edit-rerollBtn').onclick = () => {
+      editDraft.avatarSeed = randomSeed();
+      renderEditUi();
+    };
+    document.getElementById('edit-cancelBtn').onclick = () => $editModal.classList.remove('active');
+    document.getElementById('edit-saveBtn').onclick = () => {
+      const name = (editDraft.name || '').trim();
+      if (!name) { $editErr.textContent = 'Please enter a name.'; return; }
+      socket.emit('profile-update', { name, color: editDraft.color, avatarSeed: editDraft.avatarSeed });
+      $editModal.classList.remove('active');
+    };
+
+    /* ========== App Store ========== */
+    const GAMES = [
+      {
+        id: 'save-the-planet',
+        name: 'Save the Planet',
+        icon: `<svg viewBox="0 0 84 84" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="sky" cx="30%" cy="30%" r="80%">
+              <stop offset="0%" stop-color="#1b2a6b"/>
+              <stop offset="100%" stop-color="#04060f"/>
+            </radialGradient>
+            <radialGradient id="planet" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#6fd1ff"/>
+              <stop offset="60%" stop-color="#2c7be5"/>
+              <stop offset="100%" stop-color="#0c2a55"/>
+            </radialGradient>
+          </defs>
+          <rect width="84" height="84" fill="url(#sky)"/>
+          <circle cx="14" cy="18" r="1.2" fill="#fff"/>
+          <circle cx="68" cy="12" r="0.9" fill="#fff"/>
+          <circle cx="72" cy="34" r="1.1" fill="#fff"/>
+          <circle cx="22" cy="60" r="0.8" fill="#fff"/>
+          <circle cx="60" cy="68" r="1.0" fill="#fff"/>
+          <circle cx="42" cy="48" r="22" fill="url(#planet)"/>
+          <path d="M28 50 q 6 -6 14 -4 t 14 6" stroke="#2ecc40" stroke-width="2" fill="none" opacity="0.85"/>
+          <path d="M30 42 q 4 -3 8 -2 t 6 3" stroke="#2ecc40" stroke-width="1.5" fill="none" opacity="0.7"/>
+        </svg>`,
+        start: startSaveThePlanet,
+      },
+    ];
+
+    function renderAppStore() {
+      const grid = document.getElementById('app-grid');
+      grid.innerHTML = '';
+      for (const game of GAMES) {
+        const btn = document.createElement('button');
+        btn.className = 'app-card';
+        btn.innerHTML = `<span class="app-icon">${game.icon}</span><span class="app-name">${game.name}</span>`;
+        btn.onclick = () => openGame(game);
+        grid.appendChild(btn);
+      }
+    }
+
+    let currentGame = null;
+    let currentGameId = null;
+    let backNavFromCode = false;
+
+    function openGame(game) {
+      document.getElementById('app-store').style.display = 'none';
+      document.getElementById('game-view').classList.add('active');
+      document.getElementById('game-title').textContent = game.name;
+      currentGameId = game.id;
+      currentGame = game.start();
+      socket.emit('game-enter', game.id);
+      history.pushState({ inGame: game.id }, '', '#' + game.id);
+    }
+
+    function closeGameImmediate() {
+      if (currentGameId) socket.emit('game-leave', currentGameId);
+      if (currentGame && currentGame.stop) currentGame.stop();
+      currentGame = null;
+      currentGameId = null;
+      document.getElementById('game-view').classList.remove('active');
+      document.getElementById('app-store').style.display = '';
+    }
+
+    async function tryLeaveGame() {
+      if (currentGame && currentGame.isRunning && currentGame.isRunning()) {
+        const yes = await customConfirm(
+          'Leave game?',
+          'Your current round and score will be lost.',
+          'Leave',
+        );
+        if (!yes) return false;
+      }
+      return true;
+    }
+
+    document.getElementById('backBtn').onclick = async () => {
+      if (!currentGameId) return;
+      const ok = await tryLeaveGame();
+      if (!ok) return;
+      // Trigger popstate so the back button and browser-back take the same code path.
+      backNavFromCode = true;
+      history.back();
+    };
+
+    document.getElementById('pauseBtn').onclick = () => {
+      if (!currentGameId) return;
+      socket.emit('game-toggle-pause', currentGameId);
+    };
+
+    document.getElementById('restartBtn').onclick = async () => {
+      if (!currentGameId) return;
+      const yes = await customConfirm(
+        'Restart game?',
+        'Asteroids, bullets, scores, and the shield will reset for everyone playing.',
+        'Restart',
+      );
+      if (!yes) return;
+      socket.emit('game-restart', currentGameId);
+    };
+
+    window.addEventListener('popstate', async () => {
+      if (!currentGameId) return;
+      if (backNavFromCode) {
+        backNavFromCode = false;
+        closeGameImmediate();
+        return;
+      }
+      const ok = await tryLeaveGame();
+      if (ok) {
+        closeGameImmediate();
+      } else {
+        // Stay in the game by re-pushing the game state.
+        history.pushState({ inGame: currentGameId }, '', '#' + currentGameId);
+      }
+    });
+
+    /* Custom confirmation modal */
+    const $confirmModal = document.getElementById('confirmModal');
+    function customConfirm(title, text, yesLabel = 'Confirm') {
+      return new Promise((resolve) => {
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-text').textContent = text;
+        const yesBtn = document.getElementById('confirm-yesBtn');
+        const noBtn = document.getElementById('confirm-noBtn');
+        yesBtn.textContent = yesLabel;
+        $confirmModal.classList.add('active');
+        const cleanup = () => {
+          $confirmModal.classList.remove('active');
+          yesBtn.onclick = null;
+          noBtn.onclick = null;
+        };
+        yesBtn.onclick = () => { cleanup(); resolve(true); };
+        noBtn.onclick = () => { cleanup(); resolve(false); };
+      });
+    }
+
+    function showOverlay(title, text, btnText, onClick) {
+      const overlay = document.getElementById('game-overlay');
+      document.getElementById('overlay-title').textContent = title;
+      document.getElementById('overlay-text').textContent = text;
+      const btn = document.getElementById('overlay-btn');
+      btn.textContent = btnText;
+      btn.onclick = onClick;
+      overlay.classList.remove('hidden');
+    }
+    function hideOverlay() { document.getElementById('game-overlay').classList.add('hidden'); }
+
+    /* ========== Sound effects (Web Audio, synthesized) ========== */
+    let sfxCtx = null;
+    function sfxInit() {
+      if (!sfxCtx) {
+        try { sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch { return null; }
+      }
+      if (sfxCtx.state === 'suspended') sfxCtx.resume();
+      return sfxCtx;
+    }
+    function sfxLaser() {
+      const ctx = sfxInit(); if (!ctx) return;
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(900, t);
+      o.frequency.exponentialRampToValueAtTime(180, t + 0.12);
+      g.gain.setValueAtTime(0.08, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.13);
+    }
+    function sfxBoom(size = 0.4) {
+      const ctx = sfxInit(); if (!ctx) return;
+      const t = ctx.currentTime;
+      const duration = 0.5 + size * 0.7;
+
+      // 1) Initial bright crack — short high-passed white-noise transient.
+      const crackLen = Math.floor(ctx.sampleRate * 0.06);
+      const crackBuf = ctx.createBuffer(1, crackLen, ctx.sampleRate);
+      const cd = crackBuf.getChannelData(0);
+      for (let i = 0; i < crackLen; i++) {
+        const k = 1 - i / crackLen;
+        cd[i] = (Math.random() * 2 - 1) * k;
+      }
+      const crackSrc = ctx.createBufferSource(); crackSrc.buffer = crackBuf;
+      const crackHp = ctx.createBiquadFilter();
+      crackHp.type = 'highpass';
+      crackHp.frequency.value = 1800;
+      const crackG = ctx.createGain();
+      crackG.gain.setValueAtTime(0.35 + size * 0.3, t);
+      crackG.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      crackSrc.connect(crackHp).connect(crackG).connect(ctx.destination);
+      crackSrc.start(t);
+
+      // 2) Main body — brown-noise rumble with a downward filter sweep.
+      const bodyLen = Math.floor(ctx.sampleRate * duration);
+      const bodyBuf = ctx.createBuffer(1, bodyLen, ctx.sampleRate);
+      const bd = bodyBuf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < bodyLen; i++) {
+        const k = 1 - i / bodyLen;
+        last = last * 0.96 + (Math.random() * 2 - 1) * 0.18;
+        bd[i] = last * (0.5 + k * 1.5);
+      }
+      const bodySrc = ctx.createBufferSource(); bodySrc.buffer = bodyBuf;
+      const bodyFilt = ctx.createBiquadFilter();
+      bodyFilt.type = 'lowpass';
+      const startCutoff = 3200 - size * 1400;
+      const endCutoff = Math.max(40, 200 - size * 100);
+      bodyFilt.frequency.setValueAtTime(startCutoff, t);
+      bodyFilt.frequency.exponentialRampToValueAtTime(endCutoff, t + duration);
+      bodyFilt.Q.value = 1.2;
+      const bodyG = ctx.createGain();
+      const peak = 0.35 + size * 0.35;
+      bodyG.gain.setValueAtTime(0, t);
+      bodyG.gain.linearRampToValueAtTime(peak, t + 0.01);
+      bodyG.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      bodySrc.connect(bodyFilt).connect(bodyG).connect(ctx.destination);
+      bodySrc.start(t);
+
+      // 3) Sub-bass thump for medium+ explosions — sine pitch-dropping into infrasonic.
+      if (size > 0.2) {
+        const o = ctx.createOscillator();
+        const og = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(150 - size * 60, t);
+        o.frequency.exponentialRampToValueAtTime(28, t + 0.55);
+        const thump = 0.35 + size * 0.45;
+        og.gain.setValueAtTime(thump, t);
+        og.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        o.connect(og).connect(ctx.destination);
+        o.start(t); o.stop(t + 0.62);
+      }
+
+      // 4) Debris crackle tail — random short clicks.
+      const tailCount = Math.round(3 + size * 8);
+      for (let i = 0; i < tailCount; i++) {
+        const tt = t + 0.08 + Math.random() * duration * 0.8;
+        const o = ctx.createOscillator();
+        const og = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = 300 + Math.random() * 1000;
+        og.gain.setValueAtTime(0.05 + Math.random() * 0.05, tt);
+        og.gain.exponentialRampToValueAtTime(0.001, tt + 0.04);
+        o.connect(og).connect(ctx.destination);
+        o.start(tt); o.stop(tt + 0.05);
+      }
+    }
+    function sfxThud() {
+      const ctx = sfxInit(); if (!ctx) return;
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(200, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + 0.25);
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.26);
+    }
+    function sfxGameOver() {
+      const ctx = sfxInit(); if (!ctx) return;
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(420, t);
+      o.frequency.exponentialRampToValueAtTime(50, t + 1.1);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.1);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 1.15);
+    }
+
+    /* ========== Save the Planet (multiplayer) ========== */
+    function startSaveThePlanet() {
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+
+      // Earth surface as an elliptic arc spanning the full screen width:
+      // cy=H, rx=W/2, ry=EARTH_RY → meets corners at (0,H) and (W,H), peaks at (W/2, H-EARTH_RY).
+      const EARTH_RY = 150;
+      function earthSurfaceY(x) {
+        const dx = (x - W / 2) / (W / 2);
+        const c = 1 - dx * dx;
+        if (c <= 0) return H;
+        return H - EARTH_RY * Math.sqrt(c);
+      }
+      const SHIP_HALF_W = 14;
+      const SHIP_TOP_OFFSET = 18;   // tip is at y - 18
+      const SHIP_BOT_OFFSET = 12;   // base is at y + 12
+      const SHIP_MIN_Y = 30 + SHIP_TOP_OFFSET;
+      function shipMaxY(x) {
+        return earthSurfaceY(x) - 22; // keep ship clear of surface
+      }
+      function clampShipY(x, y) {
+        return Math.max(SHIP_MIN_Y, Math.min(shipMaxY(x), y));
+      }
+      function clampShipX(x) {
+        return Math.max(SHIP_HALF_W + 4, Math.min(W - SHIP_HALF_W - 4, x));
+      }
+      const DEFAULT_SHIP_Y = H - 200;
+
+      const state = {
+        running: false,
+        paused: false,
+        pausedBy: null,
+        shield: 100,
+        asteroids: new Map(), // id -> {x,y,r,vx,vy,vrot,rot,shape}
+        bullets: [], // {id?, x, y, vy, color, ownerId, r}
+        particles: [], // explosion debris: {x,y,vx,vy,r,color,life,maxLife}
+        shockwaves: [], // {x,y,r,maxR,life,maxLife,color}
+        stars: [],
+        players: new Map(), // id -> {x, y, color, name, score, avatarSeed}
+        last: 0,
+        rafId: 0,
+        mouseX: W / 2,
+        mouseY: DEFAULT_SHIP_Y,
+        lastMoveSent: 0,
+        nextLocalBulletId: 1,
+        winApplied: false,
+      };
+
+      function drawBlob(cx, cy, rx, ry, noise, seed, fillStyle) {
+        const r = mulberry32((seed >>> 0) || 1);
+        const points = 16;
+        ctx.fillStyle = fillStyle;
+        ctx.beginPath();
+        for (let i = 0; i < points; i++) {
+          const angle = (i / points) * Math.PI * 2;
+          const wobble = 1 + (r() - 0.5) * noise;
+          const px = cx + Math.cos(angle) * rx * wobble;
+          const py = cy + Math.sin(angle) * ry * wobble;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function spawnExplosion(x, y, asteroidR) {
+        const size = Math.max(0, Math.min(1, (asteroidR - 14) / 22)); // 0..1
+        const count = Math.round(10 + size * 22);
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = (60 + Math.random() * 200) * (0.7 + size * 0.8);
+          state.particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 30, // slight upward bias
+            r: 1.5 + Math.random() * (2 + size * 4),
+            color: `hsl(${20 + Math.random() * 30}, ${60 + Math.random() * 30}%, ${35 + Math.random() * 35}%)`,
+            life: 0.5 + Math.random() * 0.6,
+            maxLife: 1.0,
+          });
+        }
+        // bright flash debris
+        const sparks = Math.round(4 + size * 8);
+        for (let i = 0; i < sparks; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 200 + Math.random() * 240 * (0.6 + size);
+          state.particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r: 1 + Math.random() * 2,
+            color: `hsl(${40 + Math.random() * 20}, 100%, ${70 + Math.random() * 20}%)`,
+            life: 0.25 + Math.random() * 0.25,
+            maxLife: 0.5,
+          });
+        }
+        state.shockwaves.push({
+          x, y,
+          r: asteroidR * 0.6,
+          maxR: asteroidR * (2.5 + size * 2.5),
+          life: 0.4 + size * 0.2,
+          maxLife: 0.4 + size * 0.2,
+          color: size > 0.5 ? '255, 180, 80' : '255, 220, 140',
+        });
+        sfxBoom(size);
+      }
+
+      function updatePauseUi() {
+        const btn = document.getElementById('pauseBtn');
+        if (btn) btn.textContent = state.paused ? 'Resume' : 'Pause';
+      }
+
+      // me as a player
+      state.players.set(myId, { x: W / 2, y: DEFAULT_SHIP_Y, color: myProfile.color, name: myProfile.name, score: 0, avatarSeed: myProfile.avatarSeed });
+
+      for (let i = 0; i < 80; i++) {
+        state.stars.push({
+          x: Math.random() * W, y: Math.random() * H,
+          r: Math.random() * 1.4 + 0.2, tw: Math.random() * Math.PI * 2,
+        });
+      }
+
+      function renderScores() {
+        const el = document.getElementById('hud-scores');
+        const rows = [];
+        for (const [id, p] of state.players) {
+          rows.push(`<div class="hud-row"><span class="hud-dot" style="background:${p.color}"></span>${escapeHtml(p.name)}: ${p.score}</div>`);
+        }
+        el.innerHTML = rows.join('');
+        document.getElementById('hud-shield').textContent = 'Shield: ' + Math.max(0, Math.round(state.shield)) + '%';
+      }
+      function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+      function reset() {
+        state.shield = 100;
+        state.asteroids.clear();
+        state.bullets.length = 0;
+        state.particles.length = 0;
+        state.shockwaves.length = 0;
+        state.paused = false;
+        state.pausedBy = null;
+        state.winApplied = false;
+        for (const p of state.players.values()) p.score = 0;
+        renderScores();
+        updatePauseUi();
+      }
+
+      const keys = { left: false, right: false, up: false, down: false };
+      let lastFire = 0;
+      function tryFire() {
+        if (!state.running || state.paused) return;
+        const now = Date.now();
+        if (now - lastFire < 120) return;
+        lastFire = now;
+        const me = state.players.get(myId);
+        const x = me ? me.x : state.mouseX;
+        const y = me ? (me.y - SHIP_TOP_OFFSET) : (DEFAULT_SHIP_Y - SHIP_TOP_OFFSET);
+        socket.emit('game-fire', { gameId: 'save-the-planet', x, y });
+      }
+      function broadcastMyPos() {
+        const now = Date.now();
+        if (now - state.lastMoveSent < 50) return;
+        state.lastMoveSent = now;
+        const me = state.players.get(myId);
+        if (me) socket.emit('game-move', { gameId: 'save-the-planet', x: me.x, y: me.y });
+      }
+
+      function onClick(e) {
+        if (!state.running) return;
+        const rect = canvas.getBoundingClientRect();
+        state.mouseX = (e.clientX - rect.left) * (W / rect.width);
+        state.mouseY = (e.clientY - rect.top) * (H / rect.height);
+        const me = state.players.get(myId);
+        if (me) {
+          me.x = clampShipX(state.mouseX);
+          me.y = clampShipY(me.x, state.mouseY);
+        }
+        tryFire();
+      }
+      function onMove(e) {
+        const rect = canvas.getBoundingClientRect();
+        state.mouseX = (e.clientX - rect.left) * (W / rect.width);
+        state.mouseY = (e.clientY - rect.top) * (H / rect.height);
+        const me = state.players.get(myId);
+        if (me) {
+          me.x = clampShipX(state.mouseX);
+          me.y = clampShipY(me.x, state.mouseY);
+        }
+        broadcastMyPos();
+      }
+      function onKeyDown(e) {
+        const k = e.key;
+        if (k === 'a' || k === 'A' || k === 'ArrowLeft') keys.left = true;
+        else if (k === 'd' || k === 'D' || k === 'ArrowRight') keys.right = true;
+        else if (k === 'w' || k === 'W' || k === 'ArrowUp') keys.up = true;
+        else if (k === 's' || k === 'S' || k === 'ArrowDown') keys.down = true;
+        else if (k === ' ' || e.code === 'Space') {
+          e.preventDefault(); // stop page from scrolling
+          tryFire();
+        }
+        // arrow keys can scroll the page too
+        if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown') {
+          e.preventDefault();
+        }
+      }
+      function onKeyUp(e) {
+        const k = e.key;
+        if (k === 'a' || k === 'A' || k === 'ArrowLeft') keys.left = false;
+        else if (k === 'd' || k === 'D' || k === 'ArrowRight') keys.right = false;
+        else if (k === 'w' || k === 'W' || k === 'ArrowUp') keys.up = false;
+        else if (k === 's' || k === 'S' || k === 'ArrowDown') keys.down = false;
+      }
+      canvas.addEventListener('click', onClick);
+      canvas.addEventListener('mousemove', onMove);
+      window.addEventListener('keydown', onKeyDown);
+      window.addEventListener('keyup', onKeyUp);
+
+      function step(t) {
+        if (!state.running) return;
+        if (state.paused) {
+          state.last = t;
+          draw();
+          state.rafId = requestAnimationFrame(step);
+          return;
+        }
+        const dt = Math.min(0.05, (t - state.last) / 1000);
+        state.last = t;
+
+        // Keyboard-driven ship movement (8-directional, clamped to screen & above earth)
+        const me = state.players.get(myId);
+        if (me) {
+          const speed = 400;
+          let moved = false;
+          if (keys.left)  { me.x = me.x - speed * dt; moved = true; }
+          if (keys.right) { me.x = me.x + speed * dt; moved = true; }
+          if (keys.up)    { me.y = me.y - speed * dt; moved = true; }
+          if (keys.down)  { me.y = me.y + speed * dt; moved = true; }
+          if (moved) {
+            me.x = clampShipX(me.x);
+            me.y = clampShipY(me.x, me.y);
+            broadcastMyPos();
+          }
+        }
+
+        for (const b of state.bullets) b.y += b.vy * dt;
+        for (let i = state.bullets.length - 1; i >= 0; i--) if (state.bullets[i].y < -10) state.bullets.splice(i, 1);
+
+        for (const a of state.asteroids.values()) {
+          a.x += a.vx * dt;
+          a.y += a.vy * dt;
+          a.rot += a.vrot * dt;
+          if (a.x < a.r) { a.x = a.r; a.vx *= -1; }
+          if (a.x > W - a.r) { a.x = W - a.r; a.vx *= -1; }
+        }
+
+        // bullet/asteroid collisions — anyone's bullet can kill
+        for (const [aid, a] of state.asteroids) {
+          for (let j = state.bullets.length - 1; j >= 0; j--) {
+            const b = state.bullets[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            if (dx * dx + dy * dy < (a.r + b.r) * (a.r + b.r)) {
+              state.bullets.splice(j, 1);
+              spawnExplosion(a.x, a.y, a.r); // boom locally before we delete
+              state.asteroids.delete(aid); // remove locally so we don't re-claim each frame
+              socket.emit('game-kill', { gameId: 'save-the-planet', asteroidId: aid });
+              break;
+            }
+          }
+        }
+
+        // earth-surface collisions: asteroid touches the curve
+        for (const [aid, a] of state.asteroids) {
+          if (a.y + a.r >= earthSurfaceY(a.x)) {
+            state.asteroids.delete(aid); // remove locally so we don't re-report
+            socket.emit('game-hit', { gameId: 'save-the-planet', asteroidId: aid });
+          }
+        }
+
+        // particles & shockwaves
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+          const p = state.particles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 120 * dt; // light gravity
+          p.vx *= 0.99;     // air drag
+          p.life -= dt;
+          if (p.life <= 0) state.particles.splice(i, 1);
+        }
+        for (let i = state.shockwaves.length - 1; i >= 0; i--) {
+          const s = state.shockwaves[i];
+          s.r += ((s.maxR - s.r) / Math.max(0.05, s.life)) * dt;
+          s.life -= dt;
+          if (s.life <= 0) state.shockwaves.splice(i, 1);
+        }
+
+        draw();
+        state.rafId = requestAnimationFrame(step);
+      }
+
+      function draw() {
+        ctx.fillStyle = '#02030a';
+        ctx.fillRect(0, 0, W, H);
+
+        for (const s of state.stars) {
+          s.tw += 0.02;
+          const a = 0.5 + Math.sin(s.tw) * 0.4;
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Earth — wide elliptic arc meeting both bottom corners
+        const grad = ctx.createRadialGradient(W * 0.35, H - 40, 30, W / 2, H + 80, W * 0.7);
+        grad.addColorStop(0, '#6fd1ff');
+        grad.addColorStop(0.5, '#2c7be5');
+        grad.addColorStop(1, '#0a1f44');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(W / 2, H, W / 2, EARTH_RY, 0, Math.PI, 2 * Math.PI);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        // Continents — irregular seeded blobs sitting on the curved surface.
+        // Clip to the earth shape so coastlines naturally cut off at the horizon.
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(W / 2, H, W / 2, EARTH_RY, 0, Math.PI, 2 * Math.PI);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.clip();
+
+        const continents = [
+          { cx: W * 0.14, dy: 60,  rx: 90,  ry: 28, seed: 0x9c3f },
+          { cx: W * 0.40, dy: 28,  rx: 105, ry: 34, seed: 0x4711 },
+          { cx: W * 0.68, dy: 42,  rx: 130, ry: 30, seed: 0xa82d },
+          { cx: W * 0.90, dy: 80,  rx: 70,  ry: 22, seed: 0xc015 },
+          { cx: W * 0.27, dy: 110, rx: 38,  ry: 12, seed: 0x6df1 },
+          { cx: W * 0.55, dy: 105, rx: 30,  ry: 10, seed: 0x3a8b },
+        ];
+        for (const c of continents) {
+          const cy = earthSurfaceY(c.cx) + c.dy;
+          // base landmass
+          drawBlob(c.cx, cy, c.rx, c.ry, 0.35, c.seed, '#2b8f3a');
+          // brighter highlight on the upper side
+          drawBlob(c.cx, cy - c.ry * 0.25, c.rx * 0.78, c.ry * 0.7, 0.35, c.seed ^ 0xa5a5, '#46b454');
+          // darker forest patches
+          drawBlob(c.cx - c.rx * 0.15, cy + c.ry * 0.15, c.rx * 0.55, c.ry * 0.6, 0.45, c.seed ^ 0x5a5a, 'rgba(20,80,30,0.55)');
+        }
+
+        // A few small islands scattered around
+        const islands = [
+          { cx: W * 0.04, dy: 100, rx: 14, ry: 5, seed: 0x111 },
+          { cx: W * 0.34, dy: 95,  rx: 10, ry: 4, seed: 0x222 },
+          { cx: W * 0.62, dy: 120, rx: 16, ry: 5, seed: 0x333 },
+          { cx: W * 0.83, dy: 120, rx: 9,  ry: 4, seed: 0x444 },
+        ];
+        for (const c of islands) {
+          drawBlob(c.cx, earthSurfaceY(c.cx) + c.dy, c.rx, c.ry, 0.35, c.seed, '#3aab4d');
+        }
+
+        // Thin atmospheric haze along the horizon
+        const haze = ctx.createLinearGradient(0, H - EARTH_RY - 6, 0, H - EARTH_RY + 14);
+        haze.addColorStop(0, 'rgba(180,220,255,0)');
+        haze.addColorStop(0.5, 'rgba(180,220,255,0.25)');
+        haze.addColorStop(1, 'rgba(180,220,255,0)');
+        ctx.fillStyle = haze;
+        ctx.fillRect(0, H - EARTH_RY - 6, W, 20);
+        ctx.restore();
+
+        // Shield — offset curve riding above the earth surface; opacity tracks shield strength
+        ctx.strokeStyle = `rgba(111,209,255,${0.15 + (state.shield / 100) * 0.4})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 6) {
+          const y = earthSurfaceY(x) - 12;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // ships — every player's
+        for (const [id, p] of state.players) {
+          const sx = p.x;
+          const sy = typeof p.y === 'number' ? p.y : DEFAULT_SHIP_Y;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy - SHIP_TOP_OFFSET);
+          ctx.lineTo(sx - SHIP_HALF_W, sy + SHIP_BOT_OFFSET);
+          ctx.lineTo(sx + SHIP_HALF_W, sy + SHIP_BOT_OFFSET);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(sx - 3, sy - 2, 6, 6);
+          ctx.fillStyle = id === myId ? '#fff' : '#ccc';
+          ctx.font = '11px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText(p.name, sx, sy + SHIP_BOT_OFFSET + 14);
+        }
+
+        // bullets
+        for (const b of state.bullets) {
+          ctx.fillStyle = b.color || '#ffeb3b';
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // asteroids
+        for (const a of state.asteroids.values()) {
+          ctx.save();
+          ctx.translate(a.x, a.y); ctx.rotate(a.rot);
+
+          // Lit base (more contrast than before for a "rocky" feel)
+          const ag = ctx.createRadialGradient(-a.r * 0.35, -a.r * 0.35, 2, 0, 0, a.r);
+          ag.addColorStop(0, '#bfa08c'); ag.addColorStop(0.55, '#8a6952'); ag.addColorStop(1, '#2a1c14');
+          ctx.fillStyle = ag;
+
+          // Irregular silhouette
+          ctx.beginPath();
+          const seedScalar = (a.shape || 0) * 0.001;
+          const silPoints = 10;
+          for (let i = 0; i < silPoints; i++) {
+            const ang = (i / silPoints) * Math.PI * 2;
+            const rad = a.r * (0.82 + Math.sin(i * 1.7 + seedScalar) * 0.18);
+            const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath(); ctx.fill();
+
+          // Clip subsequent texture inside the silhouette
+          ctx.clip();
+
+          // Surface texture: a few darker patches
+          const rng = mulberry32(((a.shape || 0) >>> 0) || 1);
+          const patches = 3 + Math.floor(rng() * 3);
+          for (let i = 0; i < patches; i++) {
+            const ang = rng() * Math.PI * 2;
+            const dist = rng() * a.r * 0.7;
+            const pr = a.r * (0.18 + rng() * 0.22);
+            ctx.fillStyle = `rgba(40,28,20,${0.25 + rng() * 0.25})`;
+            ctx.beginPath();
+            ctx.arc(Math.cos(ang) * dist, Math.sin(ang) * dist, pr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Craters: dark filled disc + a rim highlight on the lit side
+          const craters = 2 + Math.floor(rng() * 4);
+          for (let i = 0; i < craters; i++) {
+            const ang = rng() * Math.PI * 2;
+            const dist = rng() * a.r * 0.65;
+            const cr = a.r * (0.10 + rng() * 0.17);
+            const cx = Math.cos(ang) * dist, cy = Math.sin(ang) * dist;
+            // crater shadow well
+            const cg = ctx.createRadialGradient(cx - cr * 0.3, cy - cr * 0.3, 0, cx, cy, cr);
+            cg.addColorStop(0, 'rgba(20,12,8,0.85)');
+            cg.addColorStop(1, 'rgba(20,12,8,0.05)');
+            ctx.fillStyle = cg;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+            ctx.fill();
+            // lit rim arc (top-left side, matching the light source on the asteroid)
+            ctx.strokeStyle = 'rgba(255,225,190,0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cr, Math.PI * 1.1, Math.PI * 1.9);
+            ctx.stroke();
+          }
+
+          // A small specular dot for shine
+          ctx.fillStyle = 'rgba(255,235,210,0.25)';
+          ctx.beginPath();
+          ctx.arc(-a.r * 0.45, -a.r * 0.45, a.r * 0.12, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        // shockwaves
+        for (const s of state.shockwaves) {
+          const alpha = Math.max(0, s.life / s.maxLife);
+          ctx.strokeStyle = `rgba(${s.color}, ${alpha * 0.7})`;
+          ctx.lineWidth = 3 * alpha + 1;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // explosion particles
+        for (const p of state.particles) {
+          const alpha = Math.max(0, p.life / p.maxLife);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function gameOver() {
+        state.running = false;
+        cancelAnimationFrame(state.rafId);
+        draw();
+        sfxGameOver();
+        const sorted = [...state.players.values()].sort((a, b) => b.score - a.score);
+        const winner = sorted[0];
+        const text = sorted.map(p => `${p.name}: ${p.score}`).join(' · ');
+
+        // Award the round to the top scorer (strict positive). Ties grant all tied players.
+        const me = state.players.get(myId);
+        if (!state.winApplied && me && winner && me.score > 0 && me.score === winner.score) {
+          state.winApplied = true;
+          myProfile.score = (myProfile.score || 0) + 1;
+          saveProfile(myProfile);
+          renderMeStrip();
+          updateUserTile('me', myProfile);
+          socket.emit('profile-update', {
+            name: myProfile.name, color: myProfile.color,
+            avatarSeed: myProfile.avatarSeed, score: myProfile.score,
+          });
+        }
+
+        const wonByMe = me && winner && me.score > 0 && me.score === winner.score;
+        const lvl = computeLevel(myProfile.score || 0);
+        const headline = wonByMe
+          ? `You win! +1 rank point (total ${myProfile.score}, level ${lvl})`
+          : `${winner ? winner.name + ' wins! ' : ''}Planet lost.`;
+        showOverlay(headline, text, 'Play again', () => {
+          socket.emit('game-restart', currentGameId);
+        });
+      }
+
+      reset();
+      draw();
+      showOverlay(
+        'Save the Planet',
+        'Asteroids are headed for Earth. Mouse to aim and click to fire, or A/D (or ←/→) to move and Space to shoot. Compete with everyone in the lobby — most kills wins. Voice chat keeps working.',
+        'Start',
+        () => {
+          hideOverlay();
+          sfxInit(); // unlock audio on user gesture
+          state.running = true; state.last = performance.now();
+          state.rafId = requestAnimationFrame(step);
+          if (state.paused) {
+            showOverlay('Paused', 'Paused by ' + playerNameById(state.pausedBy) + '. Anyone can resume.', 'Resume', () => {
+              socket.emit('game-toggle-pause', currentGameId);
+            });
+          }
+        }
+      );
+
+      function playerNameById(id) {
+        if (id === myId) return myProfile.name;
+        const p = peerProfiles[id] || state.players.get(id);
+        return (p && p.name) || 'Someone';
+      }
+
+      return {
+        isRunning() { return state.running; },
+        stop() {
+          state.running = false;
+          cancelAnimationFrame(state.rafId);
+          canvas.removeEventListener('click', onClick);
+          canvas.removeEventListener('mousemove', onMove);
+          window.removeEventListener('keydown', onKeyDown);
+          window.removeEventListener('keyup', onKeyUp);
+        },
+        onRestart() {
+          reset();
+          hideOverlay();
+          state.running = true;
+          state.last = performance.now();
+          cancelAnimationFrame(state.rafId);
+          state.rafId = requestAnimationFrame(step);
+        },
+        onPaused({ by }) {
+          state.paused = true;
+          state.pausedBy = by;
+          updatePauseUi();
+          if (state.running) {
+            showOverlay('Paused', 'Paused by ' + playerNameById(by) + '. Anyone can resume.', 'Resume', () => {
+              socket.emit('game-toggle-pause', currentGameId);
+            });
+          }
+        },
+        onResumed() {
+          state.paused = false;
+          state.pausedBy = null;
+          updatePauseUi();
+          if (state.running) hideOverlay();
+        },
+        onState(payload) {
+          const { players = [], scores = {}, shield, asteroids = [], paused, pausedBy } = payload || {};
+          for (const p of players) {
+            if (!state.players.has(p.id)) {
+              state.players.set(p.id, { x: W / 2, y: DEFAULT_SHIP_Y, color: p.color, name: p.name, score: 0, avatarSeed: p.avatarSeed });
+            } else {
+              const existing = state.players.get(p.id);
+              existing.color = p.color; existing.name = p.name; existing.avatarSeed = p.avatarSeed;
+            }
+          }
+          for (const [pid, s] of Object.entries(scores)) {
+            const p = state.players.get(pid);
+            if (p) p.score = s;
+          }
+          if (typeof shield === 'number') state.shield = shield;
+          for (const a of asteroids) {
+            if (state.asteroids.has(a.id)) continue;
+            const dt = (a.spawnedMsAgo || 0) / 1000;
+            const y = -a.r + a.vy * dt;
+            const x = Math.max(a.r, Math.min(W - a.r, a.x + a.vx * dt));
+            state.asteroids.set(a.id, { ...a, x, y, rot: (a.vrot || 0) * dt });
+          }
+          if (paused) {
+            state.paused = true;
+            state.pausedBy = pausedBy || null;
+            updatePauseUi();
+            if (state.running) {
+              showOverlay('Paused', 'Paused by ' + playerNameById(pausedBy) + '. Anyone can resume.', 'Resume', () => {
+                socket.emit('game-toggle-pause', currentGameId);
+              });
+            }
+          }
+          renderScores();
+        },
+        onPlayerJoined(p) {
+          if (!state.players.has(p.id)) {
+            state.players.set(p.id, { x: W / 2, y: DEFAULT_SHIP_Y, color: p.color, name: p.name, score: 0, avatarSeed: p.avatarSeed });
+          }
+          renderScores();
+        },
+        onPlayerLeft(id) {
+          state.players.delete(id);
+          renderScores();
+        },
+        onMove({ id, x, y }) {
+          const p = state.players.get(id);
+          if (p) {
+            if (typeof x === 'number') p.x = x;
+            if (typeof y === 'number') p.y = y;
+          }
+        },
+        onFire({ id, x, y, color, bulletId }) {
+          state.bullets.push({ id: bulletId, x, y, vy: -520, r: 3, color, ownerId: id });
+          sfxLaser();
+        },
+        onAsteroid(a) {
+          if (!state.asteroids.has(a.id)) {
+            state.asteroids.set(a.id, { ...a, y: -a.r, rot: 0 });
+          }
+        },
+        onKill({ asteroidId, by, scoreDelta }) {
+          const a = state.asteroids.get(asteroidId);
+          if (a) spawnExplosion(a.x, a.y, a.r);
+          state.asteroids.delete(asteroidId);
+          const p = state.players.get(by);
+          if (p) {
+            p.score += typeof scoreDelta === 'number' ? scoreDelta : (a ? Math.round(50 - a.r) : 0);
+            renderScores();
+          }
+        },
+        onShieldHit({ asteroidId, damage, shield }) {
+          state.asteroids.delete(asteroidId);
+          if (typeof shield === 'number') state.shield = shield;
+          else state.shield -= damage;
+          renderScores();
+          sfxThud();
+          if (state.shield <= 0 && state.running) gameOver();
+        },
+      };
+    }
+
+    /* ========== Boot ========== */
+    renderAppStore();
+    const saved = loadProfile();
+    if (saved) {
+      pendingProfile = { ...saved };
+      $name.value = saved.name;
+      renderLoginUi();
+      // auto-join
+      join(saved);
+    } else {
+      pendingProfile.avatarSeed = randomSeed();
+      renderLoginUi();
     }
   </script>
 </body>
